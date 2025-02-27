@@ -8,8 +8,8 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "watch": "tsc -w",
-    "deploy-commands": "ts-node src/deploy-commands.ts",
-    "setup-roles": "ts-node src/setup-roles.ts"
+    "deploy-commands": "ts-node src/utils/deploy-commands.ts",
+    "setup-roles": "ts-node src/utils/setup-roles.ts"
   },
   "repository": {
     "type": "git",

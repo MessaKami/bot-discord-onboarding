@@ -2,6 +2,7 @@ import { REST, Routes } from 'discord.js';
 import { data as createCampusCommand } from '../campuses/commands/create-campus.command';
 import { data as modifyCampusCommand } from '../campuses/commands/modify-campus.command';
 import { data as deleteCampusCommand } from '../campuses/commands/delete-campus.command';
+import { data as showCampusFormCommand } from '../campuses/commands/show-campus-form.command';
 import dotenv from 'dotenv';
 import { logger } from '../config/logger';
 
@@ -11,6 +12,7 @@ const commands = [
     createCampusCommand.toJSON(),
     modifyCampusCommand.toJSON(),
     deleteCampusCommand.toJSON(),
+    showCampusFormCommand.toJSON(),
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN!);
