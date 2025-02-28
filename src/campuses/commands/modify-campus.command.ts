@@ -9,8 +9,8 @@ import { logger } from '../../config/logger';
 import { CampusService } from '../services/campus.service';
 
 export const data = new SlashCommandBuilder()
-    .setName('modifier-campus')
-    .setDescription('Modifier un campus existant');
+    .setName('modify-campus')
+    .setDescription('Modify an existing campus');
 
 export async function execute(interaction: CommandInteraction) {
     try {
