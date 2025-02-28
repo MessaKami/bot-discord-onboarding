@@ -37,17 +37,18 @@ export class InteractionHandler {
             }
         } catch (error) {
             logger.error(error, 'Erreur lors du traitement de l\'interaction');
-            try {
-                const reply = {
-                    content: '❌ Une erreur est survenue lors du traitement de la commande.',
-                    ephemeral: true
-                };
-                
-                if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
-                    await interaction.reply(reply);
+            
+            // Vérifier si l'interaction n'a pas déjà reçu une réponse
+            if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
+                try {
+                    await interaction.reply({
+                        content: '❌ Une erreur est survenue lors du traitement de la commande.',
+                        ephemeral: true
+                    });
+                } catch (replyError) {
+                    // Si on ne peut pas répondre, on log simplement l'erreur
+                    logger.error(replyError, 'Impossible d\'envoyer le message d\'erreur');
                 }
-            } catch (e) {
-                logger.error(e, 'Erreur lors de la réponse d\'erreur');
             }
         }
     }
@@ -60,25 +61,32 @@ export class InteractionHandler {
             user: interaction.user.tag
         }, 'Commande slash reçue');
 
-        switch (commandName) {
-            case 'créer-campus':
-                await executeCreateCampus(interaction);
-                break;
-            case 'modifier-campus':
-                await executeModifyCampus(interaction);
-                break;
-            case 'supprimer-campus':
-                await executeDeleteCampus(interaction);
-                break;
-            case 'formulaire-campus':
-                await executeShowCampusForm(interaction);
-                break;
-            default:
-                logger.warn(`Commande inconnue: ${commandName}`);
-                await interaction.reply({ 
-                    content: 'Commande inconnue',
-                    ephemeral: true 
-                });
+        try {
+            switch (commandName) {
+                case 'create-campus':
+                    await executeCreateCampus(interaction);
+                    break;
+                case 'modify-campus':
+                    await executeModifyCampus(interaction);
+                    break;
+                case 'delete-campus':
+                    await executeDeleteCampus(interaction);
+                    break;
+                case 'campus-form':
+                    await executeShowCampusForm(interaction);
+                    break;
+                default:
+                    if (!interaction.replied && !interaction.deferred) {
+                        logger.warn(`Commande inconnue: ${commandName}`);
+                        await interaction.reply({ 
+                            content: 'Commande inconnue',
+                            ephemeral: true 
+                        });
+                    }
+            }
+        } catch (error) {
+            // On laisse l'erreur remonter au gestionnaire principal
+            throw error;
         }
     }
-} 
+}

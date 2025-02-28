@@ -10,8 +10,8 @@ import {
 import { logger } from '../../config/logger';
 
 export const data = new SlashCommandBuilder()
-    .setName('créer-campus')
-    .setDescription('Créer un nouveau campus');
+    .setName('create-campus')
+    .setDescription('Create a new campus');
 
 export async function execute(interaction: CommandInteraction) {
     try {

@@ -11,8 +11,8 @@ import { logger } from '../../config/logger';
 import { CampusService } from '../services/campus.service';
 
 export const data = new SlashCommandBuilder()
-    .setName('supprimer-campus')
-    .setDescription('Supprimer un campus existant');
+    .setName('delete-campus')
+    .setDescription('Delete an existing campus');
 
 export async function execute(interaction: CommandInteraction) {
     try {

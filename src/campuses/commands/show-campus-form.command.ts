@@ -11,8 +11,8 @@ import { logger } from '../../config/logger';
 import { CampusService } from '../services/campus.service';
 
 export const data = new SlashCommandBuilder()
-    .setName('formulaire-campus')
-    .setDescription('Afficher le formulaire de gestion des campus');
+    .setName('campus-form')
+    .setDescription('Display the campus management form');
 
 export async function execute(interaction: CommandInteraction) {
     try {
