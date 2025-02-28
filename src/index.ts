@@ -2,11 +2,12 @@ import { Client, GatewayIntentBits, Events, MessageFlags } from 'discord.js';
 import dotenv from 'dotenv';
 import { logger } from './config/logger';
 import { InteractionHandler } from './handlers/interaction.handler';
+import { InteractionHandler as CourseInteractionHandler } from './courses/events/interaction.handler';
 
 dotenv.config();
 
 logger.info('🚀 Démarrage du bot...');
-
+ 
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -77,6 +78,13 @@ client.on(Events.MessageCreate, (message) => {
 });
 
 // Gestion des erreurs globales
+    await interactionHandler.handleInteraction(interaction);
+});
+
+client.on(Events.InteractionCreate, async (interaction) => {
+    await courseInteractionHandler.handleInteraction(interaction);
+});
+
 client.on(Events.Error, (error) => {
     logger.error(error, 'Une erreur est survenue avec le client Discord');
 });
