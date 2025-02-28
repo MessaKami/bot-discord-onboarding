@@ -1,10 +1,10 @@
 import { Interaction, CommandInteraction } from 'discord.js';
-import { logger } from '../../config/logger';
-import { execute as executeCreateCampus } from '../commands/create-campus.command';
-import { execute as executeModifyCampus } from '../commands/modify-campus.command';
-import { execute as executeDeleteCampus } from '../commands/delete-campus.command';
-import { execute as executeShowCampusForm } from '../commands/show-campus-form.command';
-import { CampusInteractionsHandler } from './campus-interactions.handler';
+import { logger } from '../config/logger';
+import { execute as executeCreateCampus } from '../campuses/commands/create-campus.command';
+import { execute as executeModifyCampus } from '../campuses/commands/modify-campus.command';
+import { execute as executeDeleteCampus } from '../campuses/commands/delete-campus.command';
+import { execute as executeShowCampusForm } from '../campuses/commands/show-campus-form.command';
+import { CampusInteractionsHandler } from '../campuses/events/campus-interactions.handler';
 
 export class InteractionHandler {
     private campusInteractions: CampusInteractionsHandler;
@@ -89,4 +89,4 @@ export class InteractionHandler {
             throw error;
         }
     }
-}
+} 

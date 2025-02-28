@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits } from 'discord.js';
 import dotenv from 'dotenv';
 import { logger } from './config/logger';
-import { InteractionHandler } from './campuses/events/interaction.handler';
+import { InteractionHandler } from './handlers/interaction.handler';
 
 dotenv.config();
 
