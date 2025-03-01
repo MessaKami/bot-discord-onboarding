@@ -8,6 +8,7 @@ import { execute as listPostsCommand } from './channels/commands/list-stock-post
 import { execute as updatePostCommand } from './channels/commands/modify-stock-channel.command';
 import { execute as deletePostCommand } from './channels/commands/delete-stock-post.command';
 import { ChannelService } from './channels/services/channels-service';
+import { InteractionHandler } from './handlers/interaction.handler';
 
 dotenv.config();
 
@@ -51,7 +52,7 @@ client.commands.set('delete-post', { execute: deletePostCommand });
 
 logger.info("Commandes chargées dans le bot :", [...client.commands.keys()]);
 
-// Variable pour stocker le gestionnaire d'interaction
+const interactionHandler = new InteractionHandler();
 let channelInteractionHandler: ChannelInteractionHandler;
 
 client.once(Events.ClientReady, async (readyClient) => {
@@ -65,10 +66,9 @@ client.once(Events.ClientReady, async (readyClient) => {
             process.exit(1);
         }
 
-        // Initialiser le gestionnaire d'interactions
+        // Initialiser les gestionnaires d'interactions
         channelInteractionHandler = new ChannelInteractionHandler(client, guild);
-
-        // Vérifier que la catégorie stock existe
+        
         const channelService = new ChannelService(client, guild);
         const isValid = await channelService.validateStockCategory();
         
@@ -82,16 +82,15 @@ client.once(Events.ClientReady, async (readyClient) => {
     }
 });
 
-// ✅ Gestion des interactions
+// Gestion des interactions
 client.on(Events.InteractionCreate, async (interaction) => {
-    if (interaction.isStringSelectMenu()) {
-        logger.info(`📥 Sélection du channel détectée : ${interaction.customId}, valeur : ${interaction.values}`);
-    }
     try {
         if (interaction.isStringSelectMenu()) {
+            logger.info(`📥 Sélection du channel détectée : ${interaction.customId}, valeur : ${interaction.values}`);
             await channelInteractionHandler.handleSelectMenu(interaction);
             return;
         }
+        
         if (interaction.isModalSubmit()) {
             await channelInteractionHandler.handleModalSubmit(interaction);
             return;
@@ -99,24 +98,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         if (interaction.isChatInputCommand()) {
             logger.info(`📥 Commande reçue : ${interaction.commandName}`);
-    
             const command = client.commands.get(interaction.commandName);
             if (!command) {
                 await interaction.reply({ content: "❌ Commande inconnue", flags: MessageFlags.Ephemeral });
                 return;
             }
-
             await command.execute(interaction);
-        }
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && (error as any).code === 40060) {
-            logger.warn("⚠️ Interaction déjà traitée, aucune action requise.");
             return;
         }
 
+        await interactionHandler.handleInteraction(interaction);
+    } catch (error) {
         logger.error(`❌ Erreur lors de l'exécution d'une interaction :`, error);
-        
-        // ✅ Vérifier que l'interaction est bien une commande ou un modal avant d'appeler reply()
+
         if (
             (interaction.isChatInputCommand() || interaction.isModalSubmit()) &&
             !(interaction as ChatInputCommandInteraction | ModalSubmitInteraction).replied &&
@@ -130,7 +124,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
-// ✅ Écoute des messages
+// Écoute des messages
 client.on(Events.MessageCreate, (message) => {
     if (message.author.bot) return;
     
@@ -149,12 +143,12 @@ client.on(Events.MessageCreate, (message) => {
     }
 });
 
-// ✅ Gestion des erreurs globales
+// Gestion des erreurs globales
 client.on(Events.Error, (error) => {
     logger.error(error, 'Une erreur est survenue avec le client Discord');
 });
 
-// Ajouter un handler pour les warnings
+// Handler pour les warnings Node.js
 process.on('warning', (warning) => {
     logger.warn('⚠️ Warning Node.js détecté:', {
         name: warning.name,
@@ -163,7 +157,7 @@ process.on('warning', (warning) => {
     });
 });
 
-// ✅ Connexion du bot à Discord
+// Connexion du bot à Discord
 client.login(process.env.BOT_TOKEN)
     .then(() => {
         logger.info('✅ Token validé, connexion en cours...');
