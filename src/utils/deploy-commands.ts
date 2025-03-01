@@ -43,7 +43,7 @@ async function deployCommands() {
         logger.info('🚀 Début du déploiement des commandes slash...');
 
         await rest.put(
-            Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+            Routes.applicationGuildCommands(CLIENT_ID!, GUILD_ID!),
             { body: commands }
         );
 
