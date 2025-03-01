@@ -9,7 +9,7 @@ import { data as deleteCampusCommand } from '../campuses/commands/delete-campus.
 import { data as addPostCommand } from '../channels/commands/create-stock-post.command';
 import { data as listChannelsCommand } from '../channels/commands/list-stock-channels.command';
 import { data as updatePostCommand } from '../channels/commands/modify-stock-channel.command';
-import { data as deleteChannelCommand } from '../channels/commands/delete-stock-channel.command';
+import { data as deletePostCommand } from '../channels/commands/delete-stock-post.command';
 
 dotenv.config();
 
@@ -20,7 +20,7 @@ const commands = [
     addPostCommand.toJSON(),
     listChannelsCommand.toJSON(),
     updatePostCommand.toJSON(),
-    deleteChannelCommand.toJSON(),
+    deletePostCommand.toJSON(),
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN!);

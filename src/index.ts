@@ -6,7 +6,7 @@ import { logger } from './config/logger';
 import { execute as executeAddPost } from './channels/commands/create-stock-post.command';
 import { execute as listChannelsCommand } from './channels/commands/list-stock-channels.command';
 import { execute as updatePostCommand } from './channels/commands/modify-stock-channel.command';
-import { execute as deleteChannelCommand } from './channels/commands/delete-stock-channel.command';
+import { execute as deletePostCommand } from './channels/commands/delete-stock-post.command';
 import { ChannelService } from './channels/services/channels-service';
 
 dotenv.config();
@@ -47,7 +47,7 @@ client.commands = new Collection();
 client.commands.set('add-post', { execute: executeAddPost });
 client.commands.set('list-channels', { execute: listChannelsCommand });
 client.commands.set('update-post', { execute: updatePostCommand });
-client.commands.set('delete-channel', { execute: deleteChannelCommand });
+client.commands.set('delete-channel', { execute: deletePostCommand });
 
 console.log("Commandes chargées dans le bot :", [...client.commands.keys()]);
 
