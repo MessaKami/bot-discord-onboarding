@@ -47,7 +47,7 @@ client.commands = new Collection();
 client.commands.set('add-post', { execute: executeAddPost });
 client.commands.set('list-channels', { execute: listChannelsCommand });
 client.commands.set('update-post', { execute: updatePostCommand });
-client.commands.set('delete-channel', { execute: deletePostCommand });
+client.commands.set('delete-post', { execute: deletePostCommand });
 
 logger.info("Commandes chargées dans le bot :", [...client.commands.keys()]);
 

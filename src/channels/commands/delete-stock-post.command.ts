@@ -1,100 +1,41 @@
-import { 
-    ChatInputCommandInteraction, 
-    SlashCommandBuilder, 
-    ChannelType, 
-    GuildChannel,
-    TextChannel,
-    VoiceChannel,
-    MessageFlags
-} from "discord.js";
-import { logger } from '../../config/logger';
+import { SlashCommandBuilder, ChatInputCommandInteraction, ChannelType, TextChannel, VoiceChannel, MessageFlags } from "discord.js";
+import { ChannelService } from "../services/channels-service";
+import { logger } from "../../config/logger";
 
 export const data = new SlashCommandBuilder()
-    .setName("delete-channel")
-    .setDescription("Supprimer un channel du stock")
-    .addChannelOption(option =>
-        option
-            .setName('channel')
-            .setDescription('Le channel à supprimer')
+    .setName("delete-post")
+    .setDescription("Supprime un channel existant dans la catégorie STOCK")
+    .addChannelOption(option => 
+        option.setName("channel")
+            .setDescription("Le channel à supprimer")
             .setRequired(true)
             .addChannelTypes(ChannelType.GuildText, ChannelType.GuildVoice)
-    )
-    .addBooleanOption(option =>
-        option
-            .setName('confirm')
-            .setDescription('Confirmer la suppression')
-            .setRequired(true)
     );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     try {
-        // Différer la réponse immédiatement
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        const channel = interaction.options.getChannel("channel", true);
 
-        const channel = interaction.options.getChannel('channel', true);
-        const confirmed = interaction.options.getBoolean('confirm', true);
-        
-        if (!confirmed) {
-            await interaction.editReply({
-                content: "❌ Suppression annulée."
-            });
-            return;
+        // ✅ Vérification du type de channel avant d'accéder à parentId
+        if (!(channel instanceof TextChannel || channel instanceof VoiceChannel)) {
+            return interaction.reply({ content: "❌ Seuls les channels texte et vocaux peuvent être supprimés.", flags: MessageFlags.Ephemeral });
         }
 
-        // Vérifier que c'est bien un channel de guild
-        if (!(channel instanceof GuildChannel)) {
-            await interaction.editReply({
-                content: "❌ Ce type de channel ne peut pas être supprimé."
-            });
-            return;
-        }
-
-        // Vérifier que le channel appartient à la catégorie stock
+        // ✅ Vérifier si le channel est bien dans la catégorie STOCK
         if (channel.parentId !== process.env.STOCK_ID) {
-            await interaction.editReply({
-                content: "❌ Ce channel n'appartient pas à la catégorie stock."
-            });
-            return;
+            return interaction.reply({ content: "❌ Ce channel ne fait pas partie de la catégorie STOCK.", flags: MessageFlags.Ephemeral });
         }
 
-        // Vérifier que c'est un channel texte ou vocal
-        if (!(channel instanceof TextChannel) && !(channel instanceof VoiceChannel)) {
-            await interaction.editReply({
-                content: "❌ Seuls les channels textuels ou vocaux peuvent être supprimés."
-            });
-            return;
-        }
+        const channelService = new ChannelService(interaction.client, interaction.guild!);
+        await interaction.reply({ content: `🗑️ Suppression du channel **${channel.name}**...`, flags: MessageFlags.Ephemeral });
 
-        // Stocker le nom avant la suppression
-        const channelName = channel.name;
+        await channelService.deleteDiscordChannel(channel.id);
 
-        try {
-            // Supprimer le channel
-            await channel.delete(`Supprimé par ${interaction.user.tag}`);
-
-            // Confirmer la suppression
-            await interaction.editReply({
-                content: `✅ Le channel **${channelName}** a été supprimé avec succès.`
-            });
-        } catch (deleteError) {
-            logger.error(deleteError, "Erreur lors de la suppression du channel");
-            await interaction.editReply({
-                content: "❌ Une erreur est survenue lors de la suppression du channel."
-            });
-        }
+        await interaction.editReply({ content: `✅ Channel **${channel.name}** supprimé avec succès !` });
 
     } catch (error) {
-        logger.error(error, "Erreur lors de la suppression du channel");
-        
-        if (interaction.deferred) {
-            await interaction.editReply({
-                content: "❌ Une erreur est survenue lors de la suppression du channel."
-            });
-        } else {
-            await interaction.reply({
-                content: "❌ Une erreur est survenue lors de la suppression du channel.",
-                flags: MessageFlags.Ephemeral
-            });
-        }
+        logger.error("❌ Erreur lors de la suppression du channel :", error);
+        await interaction.editReply({ content: "❌ Une erreur est survenue lors de la suppression du channel." });
     }
-} 
+}
+
