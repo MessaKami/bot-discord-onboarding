@@ -23,6 +23,45 @@ export class ChannelInteractionHandler {
    * Gère la soumission du formulaire de création de channel.
    */
   async handleModalSubmit(interaction: ModalSubmitInteraction) {
+    if (interaction.customId === "create-stock-post") {
+        try {
+            await interaction.deferReply({ ephemeral: true });
+            console.log("✅ Interaction différée avec succès");
+
+            const name = interaction.fields.getTextInputValue("name");
+            const type = interaction.fields.getTextInputValue("type");
+            const position = parseInt(interaction.fields.getTextInputValue("position"));
+
+            console.log(`📥 Données récupérées : name=${name}, type=${type}, position=${position}`);
+
+            if (type !== "text" && type !== "voice") {
+                await interaction.editReply({
+                    content: "❌ Le type doit être 'text' ou 'voice'.",
+                });
+                return;
+            }
+
+            if (isNaN(position) || position < 0) {
+                await interaction.editReply({
+                    content: "❌ La position doit être un nombre positif.",
+                });
+                return;
+            }
+
+            const newChannel = await this.channelService.createDiscordChannel(name, type, position);
+            console.log(`✅ Channel créé : ${newChannel.id}`);
+
+            await interaction.editReply({ content: `✅ Channel "${name}" créé avec succès !` });
+
+        } catch (error) {
+            console.error("❌ Erreur lors de la création du channel :", error);
+            if (!interaction.replied) {
+                await interaction.editReply({
+                    content: "❌ Une erreur est survenue lors de la création du channel.",
+                });
+            }
+        }
+    }
     if (interaction.customId.startsWith("update-stock-post-")) {
         try {
             await interaction.deferReply({ ephemeral: true });
@@ -64,13 +103,6 @@ export class ChannelInteractionHandler {
                 .setPlaceholder("Entrez le nom du channel")
                 .setRequired(false);
 
-            const typeInput = new TextInputBuilder()
-                .setCustomId("type")
-                .setLabel("Type de channel (text/voice)")
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder("text ou voice")
-                .setRequired(false);
-
             const positionInput = new TextInputBuilder()
                 .setCustomId("position")
                 .setLabel("Nouvelle position")
@@ -80,7 +112,6 @@ export class ChannelInteractionHandler {
 
             modal.addComponents(
                 new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput),
-                new ActionRowBuilder<TextInputBuilder>().addComponents(typeInput),
                 new ActionRowBuilder<TextInputBuilder>().addComponents(positionInput)
             );
 
