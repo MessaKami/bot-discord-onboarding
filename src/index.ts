@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { ChannelInteractionHandler } from './channels/events/channels-interaction.handler';
 import { logger } from './config/logger';
 import { execute as executeAddPost } from './channels/commands/create-stock-post.command';
-import { execute as listChannelsCommand } from './channels/commands/list-stock-channels.command';
+import { execute as listChannelsCommand } from './channels/commands/list-stock-posts.command';
 import { execute as updatePostCommand } from './channels/commands/modify-stock-channel.command';
 import { execute as deletePostCommand } from './channels/commands/delete-stock-post.command';
 import { ChannelService } from './channels/services/channels-service';
