@@ -2,7 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder, CategoryChannel, Chan
 import { logger } from '../../config/logger';
 
 export const data = new SlashCommandBuilder()
-    .setName("list-channels")
+    .setName("list-stock-posts")
     .setDescription("Liste tous les channels de la catégorie configurée");
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -57,7 +57,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         });
 
     } catch (error) {
-        logger.error(error, "Erreur lors de l'exécution de la commande /list-channels");
+        logger.error(error, "Erreur lors de l'exécution de la commande /list-stock-posts");
         if (!interaction.replied) {
             await interaction.reply({ 
                 content: "❌ Une erreur s'est produite.",

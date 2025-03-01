@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { ChannelInteractionHandler } from './channels/events/channels-interaction.handler';
 import { logger } from './config/logger';
 import { execute as executeAddPost } from './channels/commands/create-stock-post.command';
-import { execute as listChannelsCommand } from './channels/commands/list-stock-posts.command';
+import { execute as listPostsCommand } from './channels/commands/list-stock-posts.command';
 import { execute as updatePostCommand } from './channels/commands/modify-stock-channel.command';
 import { execute as deletePostCommand } from './channels/commands/delete-stock-post.command';
 import { ChannelService } from './channels/services/channels-service';
@@ -45,7 +45,7 @@ if (missingEnvVars.length > 0) {
 // Ajouter une collection pour stocker les commandes
 client.commands = new Collection();
 client.commands.set('add-post', { execute: executeAddPost });
-client.commands.set('list-channels', { execute: listChannelsCommand });
+client.commands.set('list-stock-posts', { execute: listPostsCommand });
 client.commands.set('update-post', { execute: updatePostCommand });
 client.commands.set('delete-post', { execute: deletePostCommand });
 

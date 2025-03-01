@@ -7,7 +7,7 @@ import { data as modifyCampusCommand } from '../campuses/commands/modify-campus.
 import { data as deleteCampusCommand } from '../campuses/commands/delete-campus.command';
 
 import { data as addPostCommand } from '../channels/commands/create-stock-post.command';
-import { data as listChannelsCommand } from '../channels/commands/list-stock-posts.command';
+import { data as listPostsCommand } from '../channels/commands/list-stock-posts.command';
 import { data as updatePostCommand } from '../channels/commands/modify-stock-channel.command';
 import { data as deletePostCommand } from '../channels/commands/delete-stock-post.command';
 
@@ -18,7 +18,7 @@ const commands = [
     modifyCampusCommand.toJSON(),
     deleteCampusCommand.toJSON(),
     addPostCommand.toJSON(),
-    listChannelsCommand.toJSON(),
+    listPostsCommand.toJSON(),
     updatePostCommand.toJSON(),
     deletePostCommand.toJSON(),
 ];
