@@ -1,4 +1,4 @@
-import { Client, Guild, ChannelType, CategoryChannel } from 'discord.js';
+import { Client, Guild, ChannelType } from 'discord.js';
 import { logger } from '../../config/logger';
 
 interface CreateChannelDto {
@@ -103,7 +103,6 @@ export class ChannelService {
 
         const updateChannelDto = {
             name: updates.name,
-            type: updates.type,
             channelPosition: updates.channelPosition
         };
 
