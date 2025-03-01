@@ -4,6 +4,7 @@ import { execute as executeCreateCampus } from '../campuses/commands/create-camp
 import { execute as executeModifyCampus } from '../campuses/commands/modify-campus.command';
 import { execute as executeDeleteCampus } from '../campuses/commands/delete-campus.command';
 import { execute as executeShowCampusForm } from '../campuses/commands/show-campus-form.command';
+import { execute as executeSetupIdentification } from '../identification_requests/commands/setupIdentificationButton';
 import { CampusInteractionsHandler } from '../campuses/events/campus-interactions.handler';
 
 export class InteractionHandler {
@@ -18,14 +19,38 @@ export class InteractionHandler {
             // Gestion des interactions modales, boutons et menus
             if (interaction.isModalSubmit() || interaction.isStringSelectMenu() || interaction.isButton()) {
                 if (interaction.isModalSubmit()) {
+                    if (interaction.customId === 'identification-form') {
+                        const { execute } = await import('../identification_requests/events/handleIdentificationForm');
+                        await execute(interaction);
+                        return;
+                    }
                     await this.campusInteractions.handleModalSubmit(interaction);
                     return;
                 }
                 else if (interaction.isStringSelectMenu()) {
+                    if (interaction.customId.startsWith('role-select-')) {
+                        const { execute } = await import('../identification_requests/events/handleRoleSelection');
+                        await execute(interaction);
+                        return;
+                    }
                     await this.campusInteractions.handleSelectMenu(interaction);
                     return;
                 }
                 else if (interaction.isButton()) {
+                    if (interaction.customId === 'request-identification') {
+                        // Gérer le bouton d'identification
+                        const { execute } = await import('../identification_requests/events/handleIdentificationButton');
+                        await execute(interaction);
+                        return;
+                    } else if (interaction.customId.startsWith('rgpd-accept-')) {
+                        const { execute } = await import('../identification_requests/events/handleRGPDAcceptance');
+                        await execute(interaction);
+                        return;
+                    } else if (interaction.customId.startsWith('rules-accept-')) {
+                        const { execute } = await import('../identification_requests/events/handleRulesAcceptance');
+                        await execute(interaction);
+                        return;
+                    }
                     await this.campusInteractions.handleButton(interaction);
                     return;
                 }
@@ -74,6 +99,9 @@ export class InteractionHandler {
                     break;
                 case 'campus-form':
                     await executeShowCampusForm(interaction);
+                    break;
+                case 'setup-identification':
+                    await executeSetupIdentification(interaction);
                     break;
                 default:
                     if (!interaction.replied && !interaction.deferred) {
