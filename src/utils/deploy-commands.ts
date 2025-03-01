@@ -1,9 +1,15 @@
 import { REST, Routes } from 'discord.js';
+import dotenv from 'dotenv';
+import { logger } from '../config/logger';
+
 import { data as createCampusCommand } from '../campuses/commands/create-campus.command';
 import { data as modifyCampusCommand } from '../campuses/commands/modify-campus.command';
 import { data as deleteCampusCommand } from '../campuses/commands/delete-campus.command';
-import dotenv from 'dotenv';
-import { logger } from '../config/logger';
+
+import { data as addPostCommand } from '../channels/commands/create-stock-post.command';
+import { data as listChannelsCommand } from '../channels/commands/list-stock-channels.command';
+import { data as updatePostCommand } from '../channels/commands/modify-stock-channel.command';
+import { data as deleteChannelCommand } from '../channels/commands/delete-stock-channel.command';
 
 dotenv.config();
 
@@ -11,6 +17,10 @@ const commands = [
     createCampusCommand.toJSON(),
     modifyCampusCommand.toJSON(),
     deleteCampusCommand.toJSON(),
+    addPostCommand.toJSON(),
+    listChannelsCommand.toJSON(),
+    updatePostCommand.toJSON(),
+    deleteChannelCommand.toJSON(),
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN!);
@@ -33,4 +43,4 @@ async function deployCommands() {
     }
 }
 
-deployCommands(); 
+deployCommands();
