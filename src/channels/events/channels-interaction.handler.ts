@@ -86,6 +86,24 @@ export class ChannelInteractionHandler {
     
   }
   async handleSelectMenu(interaction: StringSelectMenuInteraction) {
+    if (interaction.customId === 'select-stock-channel-delete') {
+        try {
+          const channelId = interaction.values[0]; // ID du channel sélectionné
+          logger.info(`🗑️ Channel sélectionné pour suppression : ${channelId}`);
+    
+          const channelService = new ChannelService(interaction.client, interaction.guild!);
+          
+          // ✅ Suppression du channel
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+          await channelService.deleteDiscordChannel(channelId);
+          
+          await interaction.editReply({ content: `✅ Channel supprimé avec succès !` });
+    
+        } catch (error) {
+          logger.error("❌ Erreur lors de la suppression du channel :", error);
+          await interaction.editReply({ content: "❌ Une erreur est survenue lors de la suppression du channel." });
+        }
+      }
     if (interaction.customId === 'select-stock-channel') {
         try {
             const channelId = interaction.values[0]; // ID du channel sélectionné
