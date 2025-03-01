@@ -49,7 +49,7 @@ client.commands.set('list-channels', { execute: listChannelsCommand });
 client.commands.set('update-post', { execute: updatePostCommand });
 client.commands.set('delete-channel', { execute: deletePostCommand });
 
-console.log("Commandes chargées dans le bot :", [...client.commands.keys()]);
+logger.info("Commandes chargées dans le bot :", [...client.commands.keys()]);
 
 // Variable pour stocker le gestionnaire d'interaction
 let channelInteractionHandler: ChannelInteractionHandler;
@@ -85,7 +85,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 // ✅ Gestion des interactions
 client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.isStringSelectMenu()) {
-        console.log(`📥 Sélection du channel détectée : ${interaction.customId}, valeur : ${interaction.values}`);
+        logger.info(`📥 Sélection du channel détectée : ${interaction.customId}, valeur : ${interaction.values}`);
     }
     try {
         if (interaction.isStringSelectMenu()) {
@@ -98,7 +98,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
 
         if (interaction.isChatInputCommand()) {
-            console.log(`📥 Commande reçue : ${interaction.commandName}`);
+            logger.info(`📥 Commande reçue : ${interaction.commandName}`);
     
             const command = client.commands.get(interaction.commandName);
             if (!command) {
@@ -110,11 +110,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
     } catch (error) {
         if (error instanceof Error && 'code' in error && (error as any).code === 40060) {
-            console.warn("⚠️ Interaction déjà traitée, aucune action requise.");
+            logger.warn("⚠️ Interaction déjà traitée, aucune action requise.");
             return;
         }
 
-        console.error(`❌ Erreur lors de l'exécution d'une interaction :`, error);
+        logger.error(`❌ Erreur lors de l'exécution d'une interaction :`, error);
         
         // ✅ Vérifier que l'interaction est bien une commande ou un modal avant d'appeler reply()
         if (

@@ -26,13 +26,13 @@ export class ChannelInteractionHandler {
     if (interaction.customId === "create-stock-post") {
         try {
             await interaction.deferReply({ ephemeral: true });
-            console.log("✅ Interaction différée avec succès");
+            logger.info("✅ Interaction différée avec succès");
 
             const name = interaction.fields.getTextInputValue("name");
             const type = interaction.fields.getTextInputValue("type");
             const position = parseInt(interaction.fields.getTextInputValue("position"));
 
-            console.log(`📥 Données récupérées : name=${name}, type=${type}, position=${position}`);
+            logger.info(`📥 Données récupérées : name=${name}, type=${type}, position=${position}`);
 
             if (type !== "text" && type !== "voice") {
                 await interaction.editReply({
@@ -49,12 +49,12 @@ export class ChannelInteractionHandler {
             }
 
             const newChannel = await this.channelService.createDiscordChannel(name, type, position);
-            console.log(`✅ Channel créé : ${newChannel.id}`);
+            logger.info(`✅ Channel créé : ${newChannel.id}`);
 
             await interaction.editReply({ content: `✅ Channel "${name}" créé avec succès !` });
 
         } catch (error) {
-            console.error("❌ Erreur lors de la création du channel :", error);
+            logger.error("❌ Erreur lors de la création du channel :", error);
             if (!interaction.replied) {
                 await interaction.editReply({
                     content: "❌ Une erreur est survenue lors de la création du channel.",
@@ -71,13 +71,13 @@ export class ChannelInteractionHandler {
             const name = interaction.fields.getTextInputValue("name");
             const position = parseInt(interaction.fields.getTextInputValue("position"));
     
-            console.log(`🔹 Mise à jour du channel ${channelId} | Nouveau nom: ${name} | Position: ${position}`);
+            logger.info(`🔹 Mise à jour du channel ${channelId} | Nouveau nom: ${name} | Position: ${position}`);
     
             await this.channelService.updateDiscordChannel(channelId, { name, channelPosition: position });
             await interaction.editReply({ content: `✅ Channel "${name}" mis à jour avec succès !` });
     
         } catch (error) {
-            console.error("❌ Erreur lors de la mise à jour du channel :", error);
+            logger.error("❌ Erreur lors de la mise à jour du channel :", error);
             if (!interaction.replied) {
                 await interaction.editReply({ content: "❌ Une erreur est survenue lors de la mise à jour du channel." });
             }
@@ -89,7 +89,7 @@ export class ChannelInteractionHandler {
     if (interaction.customId === 'select-stock-channel') {
         try {
             const channelId = interaction.values[0]; // ID du channel sélectionné
-            console.log(`🔹 Channel sélectionné : ${channelId}`);
+            logger.info(`🔹 Channel sélectionné : ${channelId}`);
 
             // 🔹 Afficher un modal de mise à jour pour ce channel
             const modal = new ModalBuilder()
@@ -116,9 +116,9 @@ export class ChannelInteractionHandler {
             );
 
             await interaction.showModal(modal);
-            console.log("✅ Modal de mise à jour affiché !");
+            logger.info("✅ Modal de mise à jour affiché !");
         } catch (error) {
-            console.error("❌ Erreur lors de la sélection du channel :", error);
+            logger.error("❌ Erreur lors de la sélection du channel :", error);
             await interaction.reply({ content: "❌ Une erreur est survenue.", ephemeral: true });
         }
     }
