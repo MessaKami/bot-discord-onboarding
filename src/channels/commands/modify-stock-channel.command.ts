@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, ChatInputCommandInteraction, ChannelType } from "discord.js";
+import { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, ChatInputCommandInteraction, ChannelType, MessageFlags } from "discord.js";
 import { logger } from "../../config/logger";
 
 export const data = new SlashCommandBuilder()
@@ -9,7 +9,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     try {
         const categoryId = process.env.STOCK_ID; // L'ID de ta catégorie STOCK
         if (!categoryId) {
-            return interaction.reply({ content: "❌ STOCK_ID non configuré.", ephemeral: true });
+            return interaction.reply({ content: "❌ STOCK_ID non configuré.", flags: MessageFlags.Ephemeral });
         }
 
         // 🔹 Récupérer tous les channels de la catégorie STOCK
@@ -21,7 +21,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         
 
         if (!channels || channels.size === 0) {
-            return interaction.reply({ content: "❌ Aucun channel trouvé dans la catégorie STOCK.", ephemeral: true });
+            return interaction.reply({ content: "❌ Aucun channel trouvé dans la catégorie STOCK.", flags: MessageFlags.Ephemeral });
         }
 
         // 🔹 Créer un menu déroulant pour sélectionner un channel
@@ -39,10 +39,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
 
         // 🔹 Répondre avec le menu de sélection
-        await interaction.reply({ content: "📌 Sélectionne un channel à modifier :", components: [row], ephemeral: true });
+        await interaction.reply({ content: "📌 Sélectionne un channel à modifier :", components: [row], flags: MessageFlags.Ephemeral });
 
     } catch (error) {
         logger.error("❌ Erreur lors de la récupération des channels STOCK :", error);
-        await interaction.reply({ content: "❌ Une erreur est survenue.", ephemeral: true });
+        await interaction.reply({ content: "❌ Une erreur est survenue.", flags: MessageFlags.Ephemeral });
     }
 }

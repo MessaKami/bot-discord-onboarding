@@ -58,6 +58,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.showModal(modal);
     logger.info("✅ Modal affiché avec succès !");
   } catch (error) {
-    console.error("❌ Erreur lors de l'affichage du modal :", error);
+    logger.error("❌ Erreur lors de l'affichage du modal :", error);
   }
 }

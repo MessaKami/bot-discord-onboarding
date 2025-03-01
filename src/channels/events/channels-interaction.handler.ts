@@ -25,7 +25,7 @@ export class ChannelInteractionHandler {
   async handleModalSubmit(interaction: ModalSubmitInteraction) {
     if (interaction.customId === "create-stock-post") {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
             logger.info("✅ Interaction différée avec succès");
 
             const name = interaction.fields.getTextInputValue("name");
@@ -64,7 +64,7 @@ export class ChannelInteractionHandler {
     }
     if (interaction.customId.startsWith("update-stock-post-")) {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     
             const channelId = interaction.customId.replace("update-stock-post-", ""); // ✅ Récupère l'ID du channel
     
@@ -119,7 +119,7 @@ export class ChannelInteractionHandler {
             logger.info("✅ Modal de mise à jour affiché !");
         } catch (error) {
             logger.error("❌ Erreur lors de la sélection du channel :", error);
-            await interaction.reply({ content: "❌ Une erreur est survenue.", ephemeral: true });
+            await interaction.reply({ content: "❌ Une erreur est survenue.", flags: MessageFlags.Ephemeral });
         }
     }
 }

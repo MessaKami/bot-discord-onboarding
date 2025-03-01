@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events, Collection, ChatInputCommandInteraction, ModalSubmitInteraction } from 'discord.js';
+import { Client, GatewayIntentBits, Events, Collection, ChatInputCommandInteraction, ModalSubmitInteraction, MessageFlags } from 'discord.js';
 import dotenv from 'dotenv';
 
 import { ChannelInteractionHandler } from './channels/events/channels-interaction.handler';
@@ -102,7 +102,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     
             const command = client.commands.get(interaction.commandName);
             if (!command) {
-                await interaction.reply({ content: "❌ Commande inconnue", ephemeral: true });
+                await interaction.reply({ content: "❌ Commande inconnue", flags: MessageFlags.Ephemeral });
                 return;
             }
 
@@ -124,7 +124,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ) {
             await (interaction as ChatInputCommandInteraction | ModalSubmitInteraction).reply({
                 content: "❌ Une erreur est survenue.",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

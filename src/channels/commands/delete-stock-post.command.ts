@@ -4,7 +4,8 @@ import {
     ChannelType, 
     GuildChannel,
     TextChannel,
-    VoiceChannel
+    VoiceChannel,
+    MessageFlags
 } from "discord.js";
 import { logger } from '../../config/logger';
 
@@ -28,7 +29,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     try {
         // Différer la réponse immédiatement
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const channel = interaction.options.getChannel('channel', true);
         const confirmed = interaction.options.getBoolean('confirm', true);
@@ -92,7 +93,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         } else {
             await interaction.reply({
                 content: "❌ Une erreur est survenue lors de la suppression du channel.",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }
