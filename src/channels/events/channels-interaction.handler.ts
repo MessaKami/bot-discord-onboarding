@@ -23,93 +23,28 @@ export class ChannelInteractionHandler {
    * Gère la soumission du formulaire de création de channel.
    */
   async handleModalSubmit(interaction: ModalSubmitInteraction) {
-    if (interaction.customId.startsWith("update-stock-post")) {
-      try {
-        await interaction.deferReply({ ephemeral: true });
-
-        const name = interaction.fields.getTextInputValue("name");
-        const type = interaction.fields.getTextInputValue("type");
-        const position = parseInt(
-          interaction.fields.getTextInputValue("position")
-        );
-
-        if (type !== "text" && type !== "voice") {
-          await interaction.editReply({
-            content: "❌ Le type doit être 'text' ou 'voice'.",
-          });
-          return;
+    if (interaction.customId.startsWith("update-stock-post-")) {
+        try {
+            await interaction.deferReply({ ephemeral: true });
+    
+            const channelId = interaction.customId.replace("update-stock-post-", ""); // ✅ Récupère l'ID du channel
+    
+            const name = interaction.fields.getTextInputValue("name");
+            const position = parseInt(interaction.fields.getTextInputValue("position"));
+    
+            console.log(`🔹 Mise à jour du channel ${channelId} | Nouveau nom: ${name} | Position: ${position}`);
+    
+            await this.channelService.updateDiscordChannel(channelId, { name, channelPosition: position });
+            await interaction.editReply({ content: `✅ Channel "${name}" mis à jour avec succès !` });
+    
+        } catch (error) {
+            console.error("❌ Erreur lors de la mise à jour du channel :", error);
+            if (!interaction.replied) {
+                await interaction.editReply({ content: "❌ Une erreur est survenue lors de la mise à jour du channel." });
+            }
         }
-
-        if (isNaN(position) || position < 0) {
-          await interaction.editReply({
-            content: "❌ La position doit être un nombre positif.",
-          });
-          return;
-        }
-
-        const newChannel = await this.channelService.createDiscordChannel(
-          name,
-          type,
-          position
-        );
-        await interaction.editReply({
-          content: `✅ Channel "${name}" créé avec succès !`,
-        });
-      } catch (error) {
-        console.error("❌ Erreur lors de la création du channel :", error);
-        if (interaction.deferred) {
-          await interaction.editReply({
-            content:
-              "❌ Une erreur est survenue lors de la création du channel.",
-          });
-        }
-      }
     }
-
-    // 🔹 Gestion de la mise à jour d'un channel 🔹
-    else if (interaction.customId === "update-stock-post") {
-      try {
-        await interaction.deferReply({ ephemeral: true });
-
-        const uuid = interaction.fields.getTextInputValue("uuid");
-        const name = interaction.fields.getTextInputValue("name");
-        const type = interaction.fields.getTextInputValue("type");
-        const position = parseInt(
-          interaction.fields.getTextInputValue("position")
-        );
-
-        if (type !== "text" && type !== "voice") {
-          await interaction.editReply({
-            content: "❌ Le type doit être 'text' ou 'voice'.",
-          });
-          return;
-        }
-
-        if (isNaN(position) || position < 0) {
-          await interaction.editReply({
-            content: "❌ La position doit être un nombre positif.",
-          });
-          return;
-        }
-
-        await this.channelService.updateDiscordChannel(uuid, {
-          name,
-          type,
-          channelPosition: position,
-        });
-        await interaction.editReply({
-          content: `✅ Channel "${name}" mis à jour avec succès !`,
-        });
-      } catch (error) {
-        console.error("❌ Erreur lors de la mise à jour du channel :", error);
-        if (!interaction.replied) {
-          await interaction.editReply({
-            content:
-              "❌ Une erreur est survenue lors de la mise à jour du channel.",
-          });
-        }
-      }
-    }
+    
   }
   async handleSelectMenu(interaction: StringSelectMenuInteraction) {
     if (interaction.customId === 'select-stock-channel') {
