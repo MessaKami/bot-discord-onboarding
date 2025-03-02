@@ -1,9 +1,7 @@
 import { 
     Interaction, 
     ChatInputCommandInteraction, 
-    StringSelectMenuInteraction, 
-    ModalSubmitInteraction, 
-    MessageFlags 
+    MessageFlags, Client
 } from 'discord.js';
 import { logger } from '../config/logger';
 
@@ -21,21 +19,24 @@ import { execute as executeUpdatePost, handleSelectMenu as handleUpdateSelectMen
 import { execute as executeDeletePost, handleDeleteChannel } from '../channels/commands/delete-stock-post.command';
 
 // Gestionnaire d'événements campus
+import { execute as executeCreateCourse } from "../courses/commands/create-course.command";
 import { CampusInteractionsHandler } from '../campuses/events/campus-interactions.handler';
+import { CourseInteractionsHandler } from '../courses/events/course-interactions.handler';
+
 
 export class InteractionHandler {
     private campusInteractions: CampusInteractionsHandler;
+    private courseInteractions: CourseInteractionsHandler;
 
-    constructor() {
+    constructor(client: Client) {
         this.campusInteractions = new CampusInteractionsHandler();
+        this.courseInteractions = new CourseInteractionsHandler(client);
     }
 
     async handleInteraction(interaction: Interaction): Promise<void> {
         try {
             if (interaction.isModalSubmit() || interaction.isStringSelectMenu() || interaction.isButton()) {
                 logger.info(`📝 Interaction détectée : ${interaction.customId}`);
-
-                try {
                     if (interaction.isModalSubmit()) {
                         if (interaction.customId === "create-stock-post") {
                             await handleAddPostModal(interaction);
@@ -43,6 +44,15 @@ export class InteractionHandler {
                         }
                         if (interaction.customId.startsWith("update-stock-post-")) {
                             await handleUpdateModal(interaction);
+                            return;
+                        }
+                        if (interaction.customId === 'identification-form') {
+                            const { execute } = await import('../identification_requests/events/handleIdentificationForm');
+                            await execute(interaction);
+                            return;
+                        }
+                        if (interaction.customId === 'create-course-modal-from-slash') {
+                            await this.courseInteractions.handleModalSubmit(interaction);
                             return;
                         }
                         await this.campusInteractions.handleModalSubmit(interaction);
@@ -60,26 +70,43 @@ export class InteractionHandler {
                             await handleDeleteChannel(interaction);
                             return;
                         }
+                        if (interaction.customId.startsWith('role-select-')) {
+                            const { execute } = await import('../identification_requests/events/handleRoleSelection');
+                            await execute(interaction);
+                            return;
+                        }
+                        if (interaction.customId === 'certification_select' || 
+                            interaction.customId === 'stock_select') {
+                            await this.courseInteractions.handleSelectMenu(interaction);
+                            return;
+                        }
                         logger.debug(`🔘 Bouton détecté : ${interaction.customId}`);
                         await this.campusInteractions.handleSelectMenu(interaction);
+                    }
+                else if (interaction.isButton()) {
+                    if (interaction.customId === 'request-identification') {
+                        // Gérer le bouton d'identification
+                        const { execute } = await import('../identification_requests/events/handleIdentificationButton');
+                        await execute(interaction);
+                        return;
+                    } else if (interaction.customId === 'validate_stock' || 
+                        interaction.customId === 'add_more_stock') {
+                        await this.courseInteractions.handleButton(interaction);
                         return;
                     }
-
-                    if (interaction.isButton()) {
-                        logger.debug(`🔘 Bouton détecté : ${interaction.customId}`);
-                        await this.campusInteractions.handleButton(interaction);
-                        return;
-                    }
-                } catch (handlerError) {
-                    logger.error(`❌ Erreur dans l'exécution de l'interaction ${interaction.customId}`, { error: handlerError });
-                    await interaction.reply({
-                        content: '❌ Une erreur interne est survenue lors du traitement de votre action.',
-                        flags: MessageFlags.Ephemeral
-                    });
+                    logger.debug(`🔘 Bouton détecté : ${interaction.customId}`);
+                    await this.campusInteractions.handleButton(interaction);
                     return;
+                // } catch (handlerError) {
+                //     logger.error(`❌ Erreur dans l'exécution de l'interaction ${interaction.customId}`, { error: handlerError });
+                //     await interaction.reply({
+                //         content: '❌ Une erreur interne est survenue lors du traitement de votre action.',
+                //         flags: MessageFlags.Ephemeral
+                //     });
+                //     return;
+                // }
                 }
             }
-
             if (interaction.isChatInputCommand()) {
                 await this.handleSlashCommand(interaction);
             }
@@ -140,6 +167,9 @@ export class InteractionHandler {
                     await executeDeletePost(interaction);
                     break;
                 
+                case 'create-course':
+                    await executeCreateCourse(interaction);
+                    break;
                 default:
                     if (!interaction.replied && !interaction.deferred) {
                         logger.warn(`⚠️ Commande inconnue : ${commandName}`);

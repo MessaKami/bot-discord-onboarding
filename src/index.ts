@@ -2,7 +2,6 @@ import { Client, GatewayIntentBits, Events, MessageFlags } from 'discord.js';
 import dotenv from 'dotenv';
 import { logger } from './config/logger';
 import { InteractionHandler } from './handlers/interaction.handler';
-import { InteractionHandler as CourseInteractionHandler } from './courses/events/interaction.handler';
 
 dotenv.config();
 
@@ -36,7 +35,7 @@ if (missingEnvVars.length > 0) {
     process.exit(1);
 }
 
-const interactionHandler = new InteractionHandler();
+const interactionHandler = new InteractionHandler(client);
 
 client.once(Events.ClientReady, (readyClient) => {
     logger.info(`✅ Bot connecté en tant que ${readyClient.user.tag}`);
