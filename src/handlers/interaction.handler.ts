@@ -6,11 +6,7 @@ import {
     ModalSubmitInteraction,
     Client 
 } from 'discord.js';
-import { 
-    Interaction, 
-    ChatInputCommandInteraction, 
-    MessageFlags, Client
-} from 'discord.js';
+
 import { logger } from '../config/logger';
 
 // Import des commandes campus

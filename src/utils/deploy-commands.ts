@@ -6,6 +6,13 @@ import { data as createCampusCommand } from '../campuses/commands/create-campus.
 import { data as modifyCampusCommand } from '../campuses/commands/modify-campus.command';
 import { data as deleteCampusCommand } from '../campuses/commands/delete-campus.command';
 import { data as showCampusFormCommand } from '../campuses/commands/show-campus-form.command';
+<<<<<<< HEAD
+=======
+
+import { data as showPromotionFormCommand } from '../promotions/commands/show-promotion-form.command';
+import { data as createPromoCommand } from '../promotions/commands/create-promo.command';
+
+>>>>>>> e78ce94 (refactor(86c298zq8): update deploy commands to include new promotion command)
 import { data as setupIdentificationCommand } from '../identification_requests/commands/setupIdentificationButton';
 import { data as addPostCommand } from '../channels/commands/create-stock-post.command';
 import { data as listPostsCommand } from '../channels/commands/list-stock-posts.command';
@@ -29,6 +36,8 @@ const commands = [
     modifyCampusCommand.toJSON(),
     deleteCampusCommand.toJSON(),
     showCampusFormCommand.toJSON(),
+    showPromotionFormCommand.toJSON(),
+    createPromoCommand.toJSON(),
     setupIdentificationCommand.toJSON(),
     addPostCommand.toJSON(),
     listPostsCommand.toJSON(),
