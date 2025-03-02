@@ -1,5 +1,13 @@
 import { 
     Interaction, 
+    CommandInteraction, 
+    StringSelectMenuInteraction, 
+    ButtonInteraction, 
+    ModalSubmitInteraction,
+    Client 
+} from 'discord.js';
+import { 
+    Interaction, 
     ChatInputCommandInteraction, 
     MessageFlags, Client
 } from 'discord.js';
@@ -10,6 +18,7 @@ import { execute as executeCreateCampus } from '../campuses/commands/create-camp
 import { execute as executeModifyCampus } from '../campuses/commands/modify-campus.command';
 import { execute as executeDeleteCampus } from '../campuses/commands/delete-campus.command';
 import { execute as executeShowCampusForm } from '../campuses/commands/show-campus-form.command';
+import { execute as executeShowPromotionForm } from '../promotions/commands/show-promotion-form.command';
 import { execute as executeSetupIdentification } from '../identification_requests/commands/setupIdentificationButton';
 
 // Import des commandes stock-post
@@ -23,15 +32,28 @@ import { execute as executeCreateCourse } from "../courses/commands/create-cours
 import { execute as executeDeleteCourse } from "../courses/commands/delete-course.command";
 import { execute as executeShowCourseForm } from "../courses/commands/show-course-form.command";
 import { CampusInteractionsHandler } from '../campuses/events/campus-interactions.handler';
+import { PromotionInteractionsHandler } from '../promotions/events/promotion-interactions.handler';
+import { PromotionCreationHandler } from '../promotions/events/promotion-creation.handler';
+import { PromotionModalHandler } from '../promotions/events/promotion-modal.handler';
+import { execute as executeCreatePromo } from '../promotions/commands/create-promo.command';
 import { CourseInteractionsHandler } from '../courses/events/course-interactions.handler';
 
 
 export class InteractionHandler {
+    private client: Client;
     private campusInteractions: CampusInteractionsHandler;
+    private promotionInteractions: PromotionInteractionsHandler;
+    private promotionCreation: PromotionCreationHandler;
+    private promotionModal: PromotionModalHandler;
     private courseInteractions: CourseInteractionsHandler;
 
     constructor(client: Client) {
+        this.client = client;
+    constructor(client: Client) {
         this.campusInteractions = new CampusInteractionsHandler();
+        this.promotionInteractions = new PromotionInteractionsHandler();
+        this.promotionCreation = new PromotionCreationHandler(client);
+        this.promotionModal = new PromotionModalHandler();
         this.courseInteractions = new CourseInteractionsHandler(client);
     }
 
@@ -95,6 +117,14 @@ export class InteractionHandler {
                         await this.campusInteractions.handleSelectMenu(interaction);
                     }
                 if (interaction.isModalSubmit()) {
+                    if (interaction.customId === 'create-promotion-modal') {
+                        await this.promotionInteractions.handleModalSubmit(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'promotion-name-modal') {
+                        await this.promotionCreation.handlePromotionNameSubmission(interaction);
+                        return;
+                    }
                     await this.campusInteractions.handleModalSubmit(interaction);
                     return;
                 }
@@ -102,6 +132,22 @@ export class InteractionHandler {
                     if (interaction.customId.startsWith('role-select-')) {
                         const { execute } = await import('../identification_requests/events/handleRoleSelection');
                         await execute(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'delete-promotion-select') {
+                        await this.promotionInteractions.handleSelectMenu(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'select-campus-for-promo') {
+                        await this.promotionCreation.handleCampusSelection(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'select-template-forum') {
+                        await this.promotionCreation.handleTemplateSelection(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'select-specific-posts') {
+                        await this.promotionCreation.handleSpecificPostsSelection(interaction);
                         return;
                     }
                     if (interaction.customId === 'certification_select' || 
@@ -127,6 +173,23 @@ export class InteractionHandler {
                         const { execute } = await import('../identification_requests/events/handleRulesAcceptance');
                         await execute(interaction);
                         return;
+                    }
+                    if (interaction.customId.startsWith('show-') && interaction.customId.includes('promotion')) {
+                        await this.promotionInteractions.handleButton(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'enter-promotion-name') {
+                        await this.promotionModal.handlePromotionNameButton(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'finish-promotion-creation') {
+                        await this.promotionCreation.finishPromotionCreation(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'cancel-promotion-creation') {
+                        await this.promotionCreation.cancelPromotionCreation(interaction);
+                        return;
+                    }
                     } else if (
                         interaction.customId === 'show-create-course' || 
                         interaction.customId === 'show-delete-course' ||
@@ -195,8 +258,15 @@ export class InteractionHandler {
                 case 'campus-form':
                     await executeShowCampusForm(interaction);
                     break;
+                case 'promotion-form':
+                    await executeShowPromotionForm(interaction);
+                    break;
                 case 'setup-identification':
                     await executeSetupIdentification(interaction);
+                    break;
+                case 'create-promo':
+                    await executeCreatePromo(interaction);
+                    break;
                     break;
 
                 // Gestion des posts (channels)
@@ -233,4 +303,47 @@ export class InteractionHandler {
             throw error;
         }
     }
+
+    private async handleSelectMenu(interaction: StringSelectMenuInteraction) {
+        switch (interaction.customId) {
+            case 'select-campus-for-promo':
+                await this.promotionCreation.handleCampusSelection(interaction);
+                break;
+            case 'select-template-forum':
+                await this.promotionCreation.handleTemplateSelection(interaction);
+                break;
+            case 'select-specific-posts':
+                await this.promotionCreation.handleSpecificPostsSelection(interaction);
+                break;
+            default:
+                await this.campusInteractions.handleSelectMenu(interaction);
+        }
+    }
+
+    private async handleButton(interaction: ButtonInteraction) {
+        switch (interaction.customId) {
+            case 'enter-promotion-name':
+                await this.promotionModal.handlePromotionNameButton(interaction);
+                break;
+            case 'finish-promotion-creation':
+                await this.promotionCreation.finishPromotionCreation(interaction);
+                break;
+            case 'cancel-promotion-creation':
+                await this.promotionCreation.cancelPromotionCreation(interaction);
+                break;
+            default:
+                await this.campusInteractions.handleButton(interaction);
+        }
+    }
+
+    private async handleModalSubmit(interaction: ModalSubmitInteraction) {
+        switch (interaction.customId) {
+            case 'promotion-name-modal':
+                await this.promotionCreation.handlePromotionNameSubmission(interaction);
+                break;
+            default:
+                await this.campusInteractions.handleModalSubmit(interaction);
+        }
+    }
+} 
 }
