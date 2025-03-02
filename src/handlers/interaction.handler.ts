@@ -34,46 +34,62 @@ export class InteractionHandler {
         try {
             if (interaction.isModalSubmit() || interaction.isStringSelectMenu() || interaction.isButton()) {
                 logger.info(`📝 Interaction détectée : ${interaction.customId}`);
+
+                try {
+                    if (interaction.isModalSubmit()) {
+                        if (interaction.customId === "create-stock-post") {
+                            await handleAddPostModal(interaction);
+                            return;
+                        }
+                        if (interaction.customId.startsWith("update-stock-post-")) {
+                            await handleUpdateModal(interaction);
+                            return;
+                        }
+                        await this.campusInteractions.handleModalSubmit(interaction);
+                        return;
+                    }
     
-                if (interaction.isModalSubmit()) {
-                    if (interaction.customId === "create-stock-post") {
-                        await handleAddPostModal(interaction);
+                    if (interaction.isStringSelectMenu()) {
+                        if (interaction.customId === "select-stock-channel-update") {
+                            logger.info(`✅ Channel sélectionné pour modification : ${interaction.values[0]}`);
+                            await handleUpdateSelectMenu(interaction);
+                            return;
+                        }
+                        if (interaction.customId === "select-stock-channel-delete") {
+                            logger.info(`🗑️ Channel sélectionné pour suppression : ${interaction.values[0]}`);
+                            await handleDeleteChannel(interaction);
+                            return;
+                        }
+                        logger.debug(`🔘 Bouton détecté : ${interaction.customId}`);
+                        await this.campusInteractions.handleSelectMenu(interaction);
                         return;
                     }
-                    if (interaction.customId.startsWith("update-stock-post-")) {
-                        await handleUpdateModal(interaction);
+
+                    if (interaction.isButton()) {
+                        logger.debug(`🔘 Bouton détecté : ${interaction.customId}`);
+                        await this.campusInteractions.handleButton(interaction);
                         return;
                     }
-                    await this.campusInteractions.handleModalSubmit(interaction);
-                    return;
-                }
-    
-                if (interaction.isStringSelectMenu()) {
-                    if (interaction.customId === "select-stock-channel-update") {
-                        logger.info(`✅ Channel sélectionné pour modification : ${interaction.values[0]}`);
-                        await handleUpdateSelectMenu(interaction);
-                        return;
-                    }
-                    if (interaction.customId === "select-stock-channel-delete") {
-                        logger.info(`🗑️ Channel sélectionné pour suppression : ${interaction.values[0]}`);
-                        await handleDeleteChannel(interaction);
-                        return;
-                    }
-                    await this.campusInteractions.handleSelectMenu(interaction);
+                } catch (handlerError) {
+                    logger.error(`❌ Erreur dans l'exécution de l'interaction ${interaction.customId}`, { error: handlerError });
+                    await interaction.reply({
+                        content: '❌ Une erreur interne est survenue lors du traitement de votre action.',
+                        flags: MessageFlags.Ephemeral
+                    });
                     return;
                 }
             }
-    
+
             if (interaction.isChatInputCommand()) {
                 await this.handleSlashCommand(interaction);
             }
         } catch (error) {
-            logger.error(error, '❌ Erreur lors du traitement de l\'interaction');
-            
+            logger.error(error, '❌ Erreur critique dans handleInteraction()');
+
             if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
                 try {
                     await interaction.reply({
-                        content: '❌ Une erreur est survenue lors du traitement de l\'interaction.',
+                        content: '❌ Une erreur critique est survenue lors du traitement de l\'interaction.',
                         flags: MessageFlags.Ephemeral
                     });
                 } catch (replyError) {
