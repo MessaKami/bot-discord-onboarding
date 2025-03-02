@@ -1,14 +1,26 @@
-import { Interaction, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+import { 
+    Interaction, 
+    ChatInputCommandInteraction, 
+    StringSelectMenuInteraction, 
+    ModalSubmitInteraction, 
+    MessageFlags 
+} from 'discord.js';
 import { logger } from '../config/logger';
+
+// Import des commandes campus
 import { execute as executeCreateCampus } from '../campuses/commands/create-campus.command';
 import { execute as executeModifyCampus } from '../campuses/commands/modify-campus.command';
 import { execute as executeDeleteCampus } from '../campuses/commands/delete-campus.command';
 import { execute as executeShowCampusForm } from '../campuses/commands/show-campus-form.command';
 import { execute as executeSetupIdentification } from '../identification_requests/commands/setupIdentificationButton';
-import { execute as executeAddPost } from '../channels/commands/create-stock-post.command';
+
+// Import des commandes stock-post
+import { execute as executeAddPost, handleModalSubmit as handleAddPostModal } from '../channels/commands/create-stock-post.command';
 import { execute as executeListPosts } from '../channels/commands/list-stock-posts.command';
-import { execute as executeUpdatePost } from '../channels/commands/modify-stock-channel.command';
-import { execute as executeDeletePost } from '../channels/commands/delete-stock-post.command';
+import { execute as executeUpdatePost, handleSelectMenu as handleUpdateSelectMenu, handleModalSubmit as handleUpdateModal } from '../channels/commands/modify-stock-channel.command';
+import { execute as executeDeletePost, handleDeleteChannel } from '../channels/commands/delete-stock-post.command';
+
+// Gestionnaire d'événements campus
 import { CampusInteractionsHandler } from '../campuses/events/campus-interactions.handler';
 
 export class InteractionHandler {
@@ -25,11 +37,11 @@ export class InteractionHandler {
     
                 if (interaction.isModalSubmit()) {
                     if (interaction.customId === "create-stock-post") {
-                        await executeAddPost(interaction);
+                        await handleAddPostModal(interaction);
                         return;
                     }
                     if (interaction.customId.startsWith("update-stock-post-")) {
-                        await executeUpdatePost(interaction);
+                        await handleUpdateModal(interaction);
                         return;
                     }
                     await this.campusInteractions.handleModalSubmit(interaction);
@@ -37,13 +49,14 @@ export class InteractionHandler {
                 }
     
                 if (interaction.isStringSelectMenu()) {
-                    if (interaction.customId === 'select-stock-channel') {
-                        logger.info(`✅ Channel sélectionné : ${interaction.values[0]}`);
-                        await executeUpdatePost(interaction); // 🚀 Exécuter la mise à jour du channel
+                    if (interaction.customId === "select-stock-channel-update") {
+                        logger.info(`✅ Channel sélectionné pour modification : ${interaction.values[0]}`);
+                        await handleUpdateSelectMenu(interaction);
                         return;
                     }
-                    if (interaction.customId === 'select-stock-channel-delete') {
-                        await executeDeletePost(interaction);
+                    if (interaction.customId === "select-stock-channel-delete") {
+                        logger.info(`🗑️ Channel sélectionné pour suppression : ${interaction.values[0]}`);
+                        await handleDeleteChannel(interaction);
                         return;
                     }
                     await this.campusInteractions.handleSelectMenu(interaction);
@@ -55,7 +68,7 @@ export class InteractionHandler {
                 await this.handleSlashCommand(interaction);
             }
         } catch (error) {
-            logger.error(error, 'Erreur lors du traitement de l\'interaction');
+            logger.error(error, '❌ Erreur lors du traitement de l\'interaction');
             
             if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
                 try {
@@ -64,13 +77,11 @@ export class InteractionHandler {
                         flags: MessageFlags.Ephemeral
                     });
                 } catch (replyError) {
-                    logger.error(replyError, 'Impossible d\'envoyer le message d\'erreur');
+                    logger.error(replyError, '❌ Impossible d\'envoyer le message d\'erreur');
                 }
             }
         }
     }
-    
-    
 
     private async handleSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
         const { commandName } = interaction;
@@ -78,10 +89,11 @@ export class InteractionHandler {
         logger.debug({
             command: commandName,
             user: interaction.user.tag
-        }, 'Commande slash reçue');
+        }, '🚀 Commande slash reçue');
 
         try {
             switch (commandName) {
+                // Gestion des campus
                 case 'create-campus':
                     await executeCreateCampus(interaction);
                     break;
@@ -97,6 +109,8 @@ export class InteractionHandler {
                 case 'setup-identification':
                     await executeSetupIdentification(interaction);
                     break;
+
+                // Gestion des posts (channels)
                 case 'add-post':
                     await executeAddPost(interaction);
                     break;
@@ -109,19 +123,19 @@ export class InteractionHandler {
                 case 'delete-post':
                     await executeDeletePost(interaction);
                     break;
+                
                 default:
                     if (!interaction.replied && !interaction.deferred) {
-                        logger.warn(`Commande inconnue: ${commandName}`);
+                        logger.warn(`⚠️ Commande inconnue : ${commandName}`);
                         await interaction.reply({ 
-                            content: 'Commande inconnue',
+                            content: '❌ Commande inconnue.',
                             flags: MessageFlags.Ephemeral 
                         });
                     }
             }
         } catch (error) {
-            logger.error(error, `❌ Erreur lors de l\'exécution de la commande : ${commandName}`);
+            logger.error(error, `❌ Erreur lors de l'exécution de la commande : ${commandName}`);
             throw error;
         }
     }
 }
-
