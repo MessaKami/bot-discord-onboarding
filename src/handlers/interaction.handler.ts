@@ -20,6 +20,7 @@ import { execute as executeDeletePost, handleDeleteChannel } from '../channels/c
 
 // Gestionnaire d'événements campus
 import { execute as executeCreateCourse } from "../courses/commands/create-course.command";
+import { execute as executeDeleteCourse } from "../courses/commands/delete-course.command";
 import { CampusInteractionsHandler } from '../campuses/events/campus-interactions.handler';
 import { CourseInteractionsHandler } from '../courses/events/course-interactions.handler';
 
@@ -44,6 +45,15 @@ export class InteractionHandler {
                         }
                         if (interaction.customId.startsWith("update-stock-post-")) {
                             await handleUpdateModal(interaction);
+                            return;
+                        }
+                        if (interaction.customId === 'identification-form') {
+                            const { execute } = await import('../identification_requests/events/handleIdentificationForm');
+                            await execute(interaction);
+                            return;
+                        }
+                        if (interaction.customId === 'create-course-modal-from-slash') {
+                            await this.courseInteractions.handleModalSubmit(interaction);
                             return;
                         }
                         if (interaction.customId === 'identification-form') {
@@ -83,6 +93,25 @@ export class InteractionHandler {
                         logger.debug(`🔘 Bouton détecté : ${interaction.customId}`);
                         await this.campusInteractions.handleSelectMenu(interaction);
                     }
+                if (interaction.isModalSubmit()) {
+                    await this.campusInteractions.handleModalSubmit(interaction);
+                    return;
+                }
+                else if (interaction.isStringSelectMenu()) {
+                    if (interaction.customId.startsWith('role-select-')) {
+                        const { execute } = await import('../identification_requests/events/handleRoleSelection');
+                        await execute(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'certification_select' || 
+                        interaction.customId === 'stock_select' || 
+                        interaction.customId === 'delete-course-select') {
+                        await this.courseInteractions.handleSelectMenu(interaction);
+                        return;
+                    }
+                    await this.campusInteractions.handleSelectMenu(interaction);
+                    return;
+                }
                 else if (interaction.isButton()) {
                     if (interaction.customId === 'request-identification') {
                         // Gérer le bouton d'identification
@@ -90,7 +119,9 @@ export class InteractionHandler {
                         await execute(interaction);
                         return;
                     } else if (interaction.customId === 'validate_stock' || 
-                        interaction.customId === 'add_more_stock') {
+                        interaction.customId === 'add_more_stock' || 
+                        interaction.customId === 'confirm-delete-course' || 
+                        interaction.customId === 'cancel-delete-course') {
                         await this.courseInteractions.handleButton(interaction);
                         return;
                     }
@@ -170,6 +201,9 @@ export class InteractionHandler {
                 case 'create-course':
                     await executeCreateCourse(interaction);
                     break;
+                case 'delete-course':
+                    await executeDeleteCourse(interaction);
+                break;
                 default:
                     if (!interaction.replied && !interaction.deferred) {
                         logger.warn(`⚠️ Commande inconnue : ${commandName}`);
