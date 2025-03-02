@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events } from 'discord.js';
+import { Client, GatewayIntentBits, Events, MessageFlags } from 'discord.js';
 import dotenv from 'dotenv';
 import { logger } from './config/logger';
 import { InteractionHandler } from './handlers/interaction.handler';
@@ -51,7 +51,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
             await interaction.reply({
                 content: "❌ Une erreur est survenue.",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

@@ -3,7 +3,8 @@ import {
     CommandInteraction,
     StringSelectMenuBuilder,
     ActionRowBuilder,
-    StringSelectMenuOptionBuilder
+    StringSelectMenuOptionBuilder,
+    MessageFlags
 } from 'discord.js';
 import { logger } from '../../config/logger';
 import { CampusService } from '../services/campus.service';
@@ -20,7 +21,7 @@ export async function execute(interaction: CommandInteraction) {
         if (campuses.length === 0) {
             await interaction.reply({
                 content: '❌ Aucun campus n\'existe actuellement.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             logger.debug({ campuses }, 'Aucun campus trouvé');
             return;
@@ -45,7 +46,7 @@ export async function execute(interaction: CommandInteraction) {
         await interaction.reply({
             content: 'Sélectionnez le campus à modifier :',
             components: [row],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         logger.debug({
@@ -57,7 +58,7 @@ export async function execute(interaction: CommandInteraction) {
         logger.error(error, 'Erreur lors de l\'affichage du menu de modification');
         await interaction.reply({
             content: '❌ Une erreur est survenue lors du chargement des campus.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 } 
