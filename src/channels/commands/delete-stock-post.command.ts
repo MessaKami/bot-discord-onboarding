@@ -14,7 +14,7 @@ import {
     .setName("delete-post")
     .setDescription("Supprime un channel existant dans la catégorie STOCK");
   
-    export async function execute(interaction: ChatInputCommandInteraction) {
+    export async function execute(interaction: ChatInputCommandInteraction | StringSelectMenuInteraction) {
         try {
           const categoryId = process.env.STOCK_ID; // ID de la catégorie STOCK
           if (!categoryId) {
