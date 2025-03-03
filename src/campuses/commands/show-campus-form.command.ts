@@ -5,7 +5,8 @@ import {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonStyle,
-    EmbedBuilder
+    EmbedBuilder,
+    MessageFlags
 } from 'discord.js';
 import { logger } from '../../config/logger';
 import { CampusService } from '../services/campus.service';
@@ -61,7 +62,7 @@ export async function execute(interaction: CommandInteraction) {
         logger.error(error, 'Erreur lors de l\'affichage du formulaire de gestion des campus');
         await interaction.reply({
             content: '❌ Une erreur est survenue lors de l\'affichage du formulaire.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 } 

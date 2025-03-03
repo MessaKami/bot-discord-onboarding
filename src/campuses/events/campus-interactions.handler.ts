@@ -10,7 +10,8 @@ import {
     ButtonInteraction,
     StringSelectMenuInteraction,
     ModalSubmitInteraction,
-    Client
+    Client,
+    MessageFlags
 } from 'discord.js';
 import { logger } from '../../config/logger';
 import { CampusService } from '../services/campus.service';
@@ -47,7 +48,7 @@ export class CampusInteractionsHandler {
                 // Réponse à l'utilisateur qui sera supprimée après 5 minutes
                 const reply = await interaction.reply({
                     content: `✅ Le campus "${name}" a été créé avec succès !`,
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                     fetchReply: true
                 });
 
@@ -75,7 +76,7 @@ export class CampusInteractionsHandler {
                 // Message de confirmation qui sera supprimé après 5 minutes
                 const reply = await interaction.reply({
                     content: `✅ Le campus a été renommé en "${newName}" avec succès !`,
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                     fetchReply: true
                 });
 
@@ -103,7 +104,7 @@ export class CampusInteractionsHandler {
                 const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
                 await interaction.reply({
                     content: `❌ Une erreur est survenue : ${errorMessage}`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
         }
@@ -134,7 +135,7 @@ export class CampusInteractionsHandler {
                 // Envoyer une notification de suppression qui sera elle-même supprimée après 5 secondes
                 const notification = await interaction.followUp({
                     content: message,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
                 
                 // Supprimer la notification après 5 secondes
@@ -185,8 +186,6 @@ export class CampusInteractionsHandler {
                 // Stocker les campus sélectionnés pour la suppression
                 this.selectedCampusesToDelete.set(interaction.user.id, interaction.values);
                 
-                const numberOfCampuses = interaction.values.length;
-
                 // Récupérer les noms des campus sélectionnés
                 const selectedCampusNames = await Promise.all(
                     interaction.values.map(async (campusId) => {
@@ -223,18 +222,20 @@ export class CampusInteractionsHandler {
             }
         } catch (error) {
             logger.error(error, 'Erreur lors du traitement de la sélection');
-            await interaction.reply({
-                content: '❌ Une erreur est survenue lors de la sélection.',
-                ephemeral: true
-            });
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply({
+                    content: '❌ Une erreur est survenue lors de la sélection.',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
         }
     }
 
     async handleButton(interaction: ButtonInteraction): Promise<void> {
+        logger.debug(`✅ Début de handleButton()`, { customId: interaction.customId, user: interaction.user.tag });
         try {
             this.initService(interaction.client);
             
-            // Gestion des boutons du formulaire principal
             if (interaction.customId === 'show-create-campus') {
                 // Création du modal
                 const modal = new ModalBuilder()
@@ -268,7 +269,7 @@ export class CampusInteractionsHandler {
                 if (campuses.length === 0) {
                     await interaction.reply({
                         content: '❌ Aucun campus n\'existe actuellement.',
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     });
                     return;
                 }
@@ -292,7 +293,7 @@ export class CampusInteractionsHandler {
                 await interaction.reply({
                     content: 'Sélectionnez le campus à modifier :',
                     components: [row],
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -302,7 +303,7 @@ export class CampusInteractionsHandler {
                 if (campuses.length === 0) {
                     await interaction.reply({
                         content: '❌ Aucun campus n\'existe actuellement.',
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     });
                     return;
                 }
@@ -328,69 +329,94 @@ export class CampusInteractionsHandler {
                 await interaction.reply({
                     content: '⚠️ **ATTENTION** : La suppression des campus est irréversible et entraînera la suppression de toutes les promotions associées.\n\nSélectionnez les campus à supprimer :',
                     components: [row],
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
             if (interaction.customId === 'confirm-delete-campus') {
+                logger.debug(`✅ Début de handleButton()`, { customId: interaction.customId, user: interaction.user.tag });            
                 const selectedCampuses = this.selectedCampusesToDelete.get(interaction.user.id);
-                
+            
                 if (!selectedCampuses || selectedCampuses.length === 0) {
+                    logger.warn(`⚠️ Aucun campus n'a été sélectionné pour la suppression.`);
                     await interaction.reply({
                         content: '❌ Aucun campus n\'a été sélectionné pour la suppression.',
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     });
                     return;
                 }
-
-                await interaction.deferUpdate();
-                
+            
+                logger.debug(`🔄 Suppression en cours`, { selectedCampuses });
+            
+                // Ajoute un deferUpdate() pour éviter l'expiration de l'interaction
+                try {
+                    await interaction.deferUpdate();
+                    logger.debug(`✅ Interaction différée avec succès`);
+                } catch (error) {
+                    logger.error(`❌ Erreur lors du deferUpdate()`, { error });
+                }
+            
                 let successCount = 0;
                 let errorCount = 0;
-                
+            
+                // Désactiver les boutons
+                try {
+                    const disabledRow = new ActionRowBuilder<ButtonBuilder>()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('confirm-delete-campus')
+                                .setLabel('Suppression en cours...')
+                                .setStyle(ButtonStyle.Danger)
+                                .setEmoji('⏳')
+                                .setDisabled(true),
+                            new ButtonBuilder()
+                                .setCustomId('cancel-delete-campus')
+                                .setLabel('Annuler')
+                                .setStyle(ButtonStyle.Secondary)
+                                .setDisabled(true)
+                        );
+            
+                    await interaction.editReply({ components: [disabledRow] });
+                    logger.debug(`🔒 Boutons désactivés`);
+                } catch (error) {
+                    logger.error(`❌ Erreur lors de la mise à jour du message`, { error });
+                }
+            
                 for (const campusId of selectedCampuses) {
                     try {
+                        logger.debug(`📡 Envoi de la requête DELETE pour le campus`, { campusId });
                         await this.campusService!.deleteCampus(campusId);
+                        logger.info(`✅ Campus supprimé avec succès`, { campusId });
                         successCount++;
                     } catch (error) {
+                        logger.error(`❌ Erreur lors de la suppression du campus`, { campusId, error });
                         errorCount++;
-                        logger.error({ error, campusId }, 'Erreur lors de la suppression d\'un campus');
                     }
                 }
-
+            
                 // Nettoyer les sélections après la suppression
                 this.selectedCampusesToDelete.delete(interaction.user.id);
-
-                await interaction.editReply({
-                    content: `✅ Opération terminée :\n- ${successCount} campus supprimé(s) avec succès\n${errorCount > 0 ? `- ${errorCount} erreur(s) de suppression` : ''}`,
-                    components: [] // Supprimer les boutons
-                });
-
-                logger.info({
-                    user: interaction.user.tag,
-                    successCount,
-                    errorCount
-                }, 'Suppression de campus terminée');
-
-            } else if (interaction.customId === 'cancel-delete-campus') {
-                // Nettoyer les sélections
-                this.selectedCampusesToDelete.delete(interaction.user.id);
-                
-                await interaction.update({
-                    content: '❌ Opération annulée.',
-                    components: [] // Supprimer les boutons
-                });
-                
-                logger.debug({
-                    user: interaction.user.tag
-                }, 'Suppression de campus annulée');
+            
+                try {
+                    await interaction.editReply({
+                        content: `✅ Opération terminée :\n- ${successCount} campus supprimé(s) avec succès\n${errorCount > 0 ? `- ${errorCount} erreur(s) de suppression` : ''}`,
+                        components: []
+                    });
+                    logger.info(`🔄 Message final mis à jour après suppression`);
+                } catch (error) {
+                    logger.error(`❌ Erreur lors de la mise à jour finale du message`, { error });
+                }
             }
+            
+            
         } catch (error) {
             logger.error(error, 'Erreur lors du traitement du bouton');
-            await interaction.reply({
-                content: '❌ Une erreur est survenue lors de l\'opération.',
-                ephemeral: true
-            });
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply({
+                    content: '❌ Une erreur est survenue lors de l\'opération.',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
         }
     }
 } 
