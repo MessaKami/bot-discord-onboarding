@@ -57,7 +57,7 @@ export async function handleDeleteChannel(interaction: StringSelectMenuInteracti
         const channelId = interaction.values[0];
         const guild = interaction.guild;
         if (!guild) {
-            await interaction.reply({ content: "❌ Impossible de récupérer le serveur.", ephemeral: true });
+            await interaction.reply({ content: "❌ Impossible de récupérer le serveur.", flags: MessageFlags.Ephemeral });
             return;
         }
 
@@ -66,7 +66,7 @@ export async function handleDeleteChannel(interaction: StringSelectMenuInteracti
 
         await interaction.reply({
             content: `✅ Channel supprimé avec succès !`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     } catch (error) {
         logger.error("❌ Erreur lors de la suppression du channel :", error);

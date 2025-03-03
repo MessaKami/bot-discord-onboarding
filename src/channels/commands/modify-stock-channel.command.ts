@@ -102,7 +102,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
 
         const guild = interaction.guild;
         if (!guild) {
-            await interaction.reply({ content: "❌ Impossible de récupérer le serveur.", ephemeral: true });
+            await interaction.reply({ content: "❌ Impossible de récupérer le serveur.", flags: MessageFlags.Ephemeral });
             return;
         }
 
@@ -111,7 +111,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
 
         await interaction.reply({
             content: `✅ Channel mis à jour avec succès !`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     } catch (error) {
         logger.error("❌ Erreur lors de la mise à jour du channel :", error);

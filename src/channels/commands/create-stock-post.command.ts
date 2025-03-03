@@ -6,7 +6,8 @@ import {
     TextInputStyle,
     ActionRowBuilder,
     ModalSubmitInteraction,
-    ChannelType
+    ChannelType, 
+    MessageFlags
 } from "discord.js";
 import { logger } from "../../config/logger";
 import { ChannelService } from "../services/channels-service";
@@ -62,7 +63,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
 
         const guild = interaction.guild;
         if (!guild) {
-            await interaction.reply({ content: "❌ Impossible de récupérer le serveur.", ephemeral: true });
+            await interaction.reply({ content: "❌ Impossible de récupérer le serveur.", flags: MessageFlags.Ephemeral });
             return;
         }
 
@@ -71,7 +72,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction) {
 
         await interaction.reply({
             content: `✅ Channel "${name}" créé avec succès !`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     } catch (error) {
         logger.error("❌ Erreur lors du traitement du modal add-post :", error);
