@@ -35,9 +35,9 @@ if (missingEnvVars.length > 0) {
     process.exit(1);
 }
 
-const interactionHandler = new InteractionHandler();
+const interactionHandler = new InteractionHandler(client);
 
-client.once(Events.ClientReady, async (readyClient) => {
+client.once(Events.ClientReady, (readyClient) => {
     logger.info(`✅ Bot connecté en tant que ${readyClient.user.tag}`);
 });
 
@@ -81,21 +81,8 @@ client.on(Events.Error, (error) => {
     logger.error(error, 'Une erreur est survenue avec le client Discord');
 });
 
-// Handler pour les warnings Node.js
-process.on('warning', (warning) => {
-    logger.warn('⚠️ Warning Node.js détecté:', {
-        name: warning.name,
-        message: warning.message,
-        stack: warning.stack
-    });
-});
-
-// Connexion du bot à Discord
 client.login(process.env.BOT_TOKEN)
-    .then(() => {
-        logger.info('✅ Token validé, connexion en cours...');
-    })
     .catch((error) => {
-        logger.fatal('❌ Impossible de connecter le bot', error);
+        logger.fatal(error, 'Impossible de connecter le bot');
         process.exit(1);
     });

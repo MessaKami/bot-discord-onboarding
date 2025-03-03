@@ -6,14 +6,14 @@ import { data as createCampusCommand } from '../campuses/commands/create-campus.
 import { data as modifyCampusCommand } from '../campuses/commands/modify-campus.command';
 import { data as deleteCampusCommand } from '../campuses/commands/delete-campus.command';
 import { data as showCampusFormCommand } from '../campuses/commands/show-campus-form.command';
-
 import { data as setupIdentificationCommand } from '../identification_requests/commands/setupIdentificationButton';
-
 import { data as addPostCommand } from '../channels/commands/create-stock-post.command';
 import { data as listPostsCommand } from '../channels/commands/list-stock-posts.command';
 import { data as updatePostCommand } from '../channels/commands/modify-stock-channel.command';
 import { data as deletePostCommand } from '../channels/commands/delete-stock-post.command';
-
+import { data as createCourseCommand } from '../courses/commands/create-course.command';
+import { data as deleteCourseCommand } from '../courses/commands/delete-course.command';
+import { data as showCourseFormCommand } from '../courses/commands/show-course-form.command';
 dotenv.config();
 
 // Vérification des variables d'environnement requises
@@ -34,6 +34,9 @@ const commands = [
     listPostsCommand.toJSON(),
     updatePostCommand.toJSON(),
     deletePostCommand.toJSON(),
+    createCourseCommand.toJSON(),
+    deleteCourseCommand.toJSON(),
+    showCourseFormCommand.toJSON(),
 ];
 
 const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
