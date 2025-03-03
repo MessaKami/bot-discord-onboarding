@@ -104,7 +104,8 @@ export class InteractionHandler {
                             return;
                         }
                         if (interaction.customId === 'certification_select' || 
-                            interaction.customId === 'stock_select') {
+                            interaction.customId === 'stock_select' ||
+                            interaction.customId === 'delete-course-select') {
                             await this.courseInteractions.handleSelectMenu(interaction);
                             return;
                         }
