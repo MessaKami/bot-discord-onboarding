@@ -1,8 +1,14 @@
 import { 
     Interaction, 
-    ChatInputCommandInteraction, 
-    MessageFlags, Client
+    CommandInteraction, 
+    StringSelectMenuInteraction, 
+    ButtonInteraction, 
+    ModalSubmitInteraction,
+    Client,
+    ChatInputCommandInteraction,
+    MessageFlags
 } from 'discord.js';
+
 import { logger } from '../config/logger';
 
 // Import des commandes campus
@@ -23,15 +29,22 @@ import { execute as executeCreateCourse } from "../courses/commands/create-cours
 import { execute as executeDeleteCourse } from "../courses/commands/delete-course.command";
 import { execute as executeShowCourseForm } from "../courses/commands/show-course-form.command";
 import { CampusInteractionsHandler } from '../campuses/events/campus-interactions.handler';
+import { PromotionCreationHandler } from '../promotions/events/promotion-creation.handler';
+import { PromotionModalHandler } from '../promotions/events/promotion-modal.handler';
+import { execute as executeCreatePromo } from '../promotions/commands/create-promo.command';
 import { CourseInteractionsHandler } from '../courses/events/course-interactions.handler';
 
 
 export class InteractionHandler {
     private campusInteractions: CampusInteractionsHandler;
+    private promotionCreation: PromotionCreationHandler;
+    private promotionModal: PromotionModalHandler;
     private courseInteractions: CourseInteractionsHandler;
 
     constructor(client: Client) {
         this.campusInteractions = new CampusInteractionsHandler();
+        this.promotionCreation = new PromotionCreationHandler(client);
+        this.promotionModal = new PromotionModalHandler();
         this.courseInteractions = new CourseInteractionsHandler(client);
     }
 
@@ -40,6 +53,10 @@ export class InteractionHandler {
             if (interaction.isModalSubmit() || interaction.isStringSelectMenu() || interaction.isButton()) {
                 logger.info(`📝 Interaction détectée : ${interaction.customId}`);
                     if (interaction.isModalSubmit()) {
+                        if (interaction.customId === 'promotion-name-modal') {
+                            await this.promotionCreation.handlePromotionNameSubmission(interaction);
+                            return;
+                        }
                         if (interaction.customId === "create-stock-post") {
                             await handleAddPostModal(interaction);
                             return;
@@ -91,28 +108,22 @@ export class InteractionHandler {
                             await this.courseInteractions.handleSelectMenu(interaction);
                             return;
                         }
+                        if (interaction.customId === 'select-campus-for-promo') {
+                            await this.promotionCreation.handleCampusSelection(interaction);
+                            return;
+                        }
+                        if (interaction.customId === 'select-template-forum') {
+                            await this.promotionCreation.handleTemplateSelection(interaction);
+                            return;
+                        }
+                        if (interaction.customId === 'select-specific-posts') {
+                            await this.promotionCreation.handleSpecificPostsSelection(interaction);
+                            return;
+                        }
                         logger.debug(`🔘 Bouton détecté : ${interaction.customId}`);
                         await this.campusInteractions.handleSelectMenu(interaction);
                     }
-                if (interaction.isModalSubmit()) {
-                    await this.campusInteractions.handleModalSubmit(interaction);
-                    return;
-                }
-                else if (interaction.isStringSelectMenu()) {
-                    if (interaction.customId.startsWith('role-select-')) {
-                        const { execute } = await import('../identification_requests/events/handleRoleSelection');
-                        await execute(interaction);
-                        return;
-                    }
-                    if (interaction.customId === 'certification_select' || 
-                        interaction.customId === 'stock_select' || 
-                        interaction.customId === 'delete-course-select') {
-                        await this.courseInteractions.handleSelectMenu(interaction);
-                        return;
-                    }
-                    await this.campusInteractions.handleSelectMenu(interaction);
-                    return;
-                }
+               
                 else if (interaction.isButton()) {
                     if (interaction.customId === 'request-identification') {
                         // Gérer le bouton d'identification
@@ -127,7 +138,20 @@ export class InteractionHandler {
                         const { execute } = await import('../identification_requests/events/handleRulesAcceptance');
                         await execute(interaction);
                         return;
-                    } else if (
+                    }
+                    if (interaction.customId === 'enter-promotion-name') {
+                        await this.promotionModal.handlePromotionNameButton(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'finish-promotion-creation') {
+                        await this.promotionCreation.finishPromotionCreation(interaction);
+                        return;
+                    }
+                    if (interaction.customId === 'cancel-promotion-creation') {
+                        await this.promotionCreation.cancelPromotionCreation(interaction);
+                        return;
+                    }
+                    else if (
                         interaction.customId === 'show-create-course' || 
                         interaction.customId === 'show-delete-course' ||
                         interaction.customId === 'validate_stock' || 
@@ -199,6 +223,10 @@ export class InteractionHandler {
                     await executeSetupIdentification(interaction);
                     break;
 
+                case 'create-promo':
+                    await executeCreatePromo(interaction);
+                    break;
+
                 // Gestion des posts (channels)
                 case 'add-post':
                     await executeAddPost(interaction);
@@ -233,4 +261,5 @@ export class InteractionHandler {
             throw error;
         }
     }
-}
+} 
+

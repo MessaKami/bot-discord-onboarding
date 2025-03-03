@@ -14,6 +14,8 @@ import { data as deletePostCommand } from '../channels/commands/delete-stock-pos
 import { data as createCourseCommand } from '../courses/commands/create-course.command';
 import { data as deleteCourseCommand } from '../courses/commands/delete-course.command';
 import { data as showCourseFormCommand } from '../courses/commands/show-course-form.command';
+import { data as createPromoCommand } from '../promotions/commands/create-promo.command';
+
 dotenv.config();
 
 // Vérification des variables d'environnement requises
@@ -29,6 +31,7 @@ const commands = [
     modifyCampusCommand.toJSON(),
     deleteCampusCommand.toJSON(),
     showCampusFormCommand.toJSON(),
+    createPromoCommand.toJSON(),
     setupIdentificationCommand.toJSON(),
     addPostCommand.toJSON(),
     listPostsCommand.toJSON(),
